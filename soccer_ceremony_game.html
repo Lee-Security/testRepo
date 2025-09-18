@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>축구선수 세레모니 맞추기 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        .ceremony-container {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .player-silhouette {
+            width: 150px;
+            height: 200px;
+            background: #000;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            transition: all 0.3s ease;
+        }
+
+        .ceremony-hint {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .ceremony-description {
+            font-size: 1.1em;
+            color: #E0E0E0;
+            max-width: 500px;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 15px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn {
+            background: #4CAF50;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .skip-btn {
+            background: #ff9800;
+            color: white;
+        }
+
+        .skip-btn:hover {
+            background: #e68900;
+            transform: translateY(-2px);
+        }
+
+        .result {
+            font-size: 1.3em;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .correct {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+
+        .incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            color: #f44336;
+        }
+
+        .game-over {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        .restart-btn {
+            background: #2196F3;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            input[type="text"] {
+                width: 250px;
+                margin-bottom: 10px;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>⚽ 축구선수 세레모니 맞추기</h1>
+        
+        <div class="game-info">
+            <div>문제: <span id="current-question">1</span> / 15</div>
+            <div>점수: <span id="score">0</span></div>
+        </div>
+
+        <div id="game-content">
+            <div class="ceremony-container">
+                <div class="player-silhouette" id="player-silhouette">👤</div>
+                <div class="ceremony-hint" id="ceremony-hint">세레모니 힌트</div>
+                <div class="ceremony-description" id="ceremony-description">세레모니 설명</div>
+            </div>
+
+            <div class="input-section">
+                <input type="text" id="answer-input" placeholder="선수 이름을 입력하세요 (한국어)" maxlength="20">
+                <br><br>
+                <button class="submit-btn" onclick="checkAnswer()">정답 확인</button>
+                <button class="skip-btn" onclick="skipQuestion()">건너뛰기</button>
+            </div>
+
+            <div class="result" id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                silhouette: "🤫",
+                hint: "침묵의 세레모니",
+                description: "손가락을 입에 대고 조용히 하라는 제스처를 취하는 세레모니",
+                answer: "메시",
+                answers: ["메시", "리오넬메시", "리오넬 메시"]
+            },
+            {
+                silhouette: "💪",
+                hint: "근육 자랑 세레모니",
+                description: "골을 넣은 후 상의를 벗고 근육을 자랑하는 세레모니",
+                answer: "호날두",
+                answers: ["호날두", "크리스티아누호날두", "크리스티아누 호날두", "크리스티아노 호날두"]
+            },
+            {
+                silhouette: "🎭",
+                hint: "마스크 벗기기 세레모니",
+                description: "얼굴에 손을 대고 마스크를 벗는 듯한 세레모니",
+                answer: "음바페",
+                answers: ["음바페", "킬리안음바페", "킬리안 음바페"]
+            },
+            {
+                silhouette: "🕺",
+                hint: "살사 댄스 세레모니",
+                description: "라틴 댄스처럼 엉덩이를 흔드는 유쾌한 세레모니",
+                answer: "호나우지뉴",
+                answers: ["호나우지뉴", "호나우디뉴"]
+            },
+            {
+                silhouette: "🤲",
+                hint: "기도 세레모니",
+                description: "하늘을 향해 두 손을 모으고 기도하는 세레모니",
+                answer: "카카",
+                answers: ["카카", "리카르두카카"]
+            },
+            {
+                silhouette: "👑",
+                hint: "왕관 세레모니",
+                description: "머리에 손을 올려 왕관을 쓴 듯한 제스처",
+                answer: "즐라탄",
+                answers: ["즐라탄", "이브라히모비치", "즐라탄이브라히모비치"]
+            },
+            {
+                silhouette: "🏹",
+                hint: "활 쏘기 세레모니",
+                description: "활을 당기고 화살을 쏘는 듯한 동작",
+                answer: "오바메양",
+                answers: ["오바메양", "피에르오바메양"]
+            },
+            {
+                silhouette: "🤟",
+                hint: "록앤롤 세레모니",
+                description: "양손으로 뿔 모양을 만드는 록 스타일 세레모니",
+                answer: "가레스베일",
+                answers: ["베일", "가레스베일", "가레스 베일"]
+            },
+            {
+                silhouette: "🎪",
+            hint: "백플립 세레모니",
+                description: "공중에서 뒤로 도는 화려한 체조 동작",
+                answer: "네이마르",
+                answers: ["네이마르", "네이마르주니오르"]
+            },
+            {
+                silhouette: "🎯",
+                hint: "조준 세레모니",
+                description: "총을 겨누는 듯한 자세로 정확함을 표현",
+                answer: "해리케인",
+                answers: ["케인", "해리케인", "해리 케인"]
+            },
+            {
+                silhouette: "😴",
+                hint: "잠자기 세레모니",
+                description: "손을 베개 삼아 잠자는 척하는 세레모니",
+                answer: "엘링홀란드",
+                answers: ["홀란드", "엘링홀란드", "할란드", "엘링할란드"]
+            },
+            {
+                silhouette: "🤐",
+                hint: "지퍼 세레모니",
+                description: "입에 지퍼를 잠그는 듯한 동작",
+                answer: "모라타",
+                answers: ["모라타", "알바로모라타"]
+            },
+            {
+                silhouette: "💍",
+                hint: "반지 키스 세레모니",
+                description: "반지에 키스하고 하늘을 가리키는 세레모니",
+                answer: "라모스",
+                answers: ["라모스", "세르히오라모스", "세르지오라모스"]
+            },
+            {
+                silhouette: "🎈",
+                hint: "풍선 세레모니",
+                description: "양손을 위로 들고 풍선을 날리는 듯한 세레모니",
+                answer: "그리즈만",
+                answers: ["그리즈만", "앙투안그리즈만"]
+            },
+            {
+                silhouette: "🦅",
+                hint: "독수리 날개 세레모니",
+                description: "양팔을 벌려 독수리가 나는 것처럼 표현하는 세레모니",
+                answer: "디발라",
+                answers: ["디발라", "파울로디발라", "파울루디발라"]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let gameEnded = false;
+
+        function displayQuestion() {
+            if (currentQuestion >= questions.length) {
+                endGame();
+                return;
+            }
+
+            const question = questions[currentQuestion];
+            document.getElementById('current-question').textContent = currentQuestion + 1;
+            document.getElementById('player-silhouette').textContent = question.silhouette;
+            document.getElementById('ceremony-hint').textContent = question.hint;
+            document.getElementById('ceremony-description').textContent = question.description;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('result').textContent = '';
+            document.getElementById('result').className = 'result';
+            document.getElementById('answer-input').focus();
+        }
+
+        function checkAnswer() {
+            if (gameEnded) return;
+
+            const userAnswer = document.getElementById('answer-input').value.trim().toLowerCase().replace(/\s/g, '');
+            const question = questions[currentQuestion];
+            const correctAnswers = question.answers.map(ans => ans.toLowerCase().replace(/\s/g, ''));
+            
+            const resultDiv = document.getElementById('result');
+            
+            if (correctAnswers.includes(userAnswer)) {
+                score++;
+                document.getElementById('score').textContent = score;
+                resultDiv.textContent = `정답입니다! 🎉 (${question.answer})`;
+                resultDiv.className = 'result correct';
+            } else {
+                resultDiv.textContent = `틀렸습니다. 정답은 "${question.answer}" 입니다.`;
+                resultDiv.className = 'result incorrect';
+            }
+
+            setTimeout(() => {
+                currentQuestion++;
+                displayQuestion();
+            }, 2500);
+        }
+
+        function skipQuestion() {
+            if (gameEnded) return;
+
+            const resultDiv = document.getElementById('result');
+            const question = questions[currentQuestion];
+            
+            resultDiv.textContent = `건너뛰었습니다. 정답은 "${question.answer}" 입니다.`;
+            resultDiv.className = 'result incorrect';
+
+            setTimeout(() => {
+                currentQuestion++;
+                displayQuestion();
+            }, 2500);
+        }
+
+        function endGame() {
+            gameEnded = true;
+            const percentage = Math.round((score / questions.length) * 100);
+            let message = '';
+            
+            if (percentage >= 80) {
+                message = '축구 박사! 🏆';
+            } else if (percentage >= 60) {
+                message = '축구 팬! ⚽';
+            } else if (percentage >= 40) {
+                message = '축구 입문자! 📚';
+            } else {
+                message = '더 많은 축구를 봐야겠어요! 📺';
+            }
+
+            document.getElementById('game-content').innerHTML = `
+                <div class="game-over">
+                    <h2>게임 끝! 🎉</h2>
+                    <p style="font-size: 1.5em; margin: 20px 0;">
+                        최종 점수: ${score} / ${questions.length} (${percentage}%)
+                    </p>
+                    <p style="font-size: 1.3em; margin: 20px 0;">
+                        ${message}
+                    </p>
+                    <button class="restart-btn" onclick="restartGame()">다시 시작</button>
+                </div>
+            `;
+        }
+
+        function restartGame() {
+            currentQuestion = 0;
+            score = 0;
+            gameEnded = false;
+            document.getElementById('score').textContent = '0';
+            
+            document.getElementById('game-content').innerHTML = `
+                <div class="ceremony-container">
+                    <div class="player-silhouette" id="player-silhouette">👤</div>
+                    <div class="ceremony-hint" id="ceremony-hint">세레모니 힌트</div>
+                    <div class="ceremony-description" id="ceremony-description">세레모니 설명</div>
+                </div>
+
+                <div class="input-section">
+                    <input type="text" id="answer-input" placeholder="선수 이름을 입력하세요 (한국어)" maxlength="20">
+                    <br><br>
+                    <button class="submit-btn" onclick="checkAnswer()">정답 확인</button>
+                    <button class="skip-btn" onclick="skipQuestion()">건너뛰기</button>
+                </div>
+
+                <div class="result" id="result"></div>
+            `;
+            
+            displayQuestion();
+        }
+
+        // 엔터 키로 답안 제출
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !gameEnded) {
+                checkAnswer();
+            }
+        });
+
+        // 게임 시작
+        displayQuestion();
+    </script>
+</body>
+</html>
